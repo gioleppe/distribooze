@@ -39,7 +39,7 @@ parser.add_argument('-f', metavar='F', dest="filter",
 
 args = parser.parse_args()
 
-print("Analyzing pcap: ", args.pcaps)
+print("Analyzing pcap: ", args.pcap)
 print("Using BPF filter: ", args.filter)
 
 caps = sniff(offline=args.pcap, filter=args.filter)
