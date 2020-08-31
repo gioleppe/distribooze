@@ -58,4 +58,10 @@ show that the flows are very similar, with more than 60% of client-side packets 
 
 -  the instagram pcap is difficult to analyse since there's a multitude of hosts in the pcap. 
 That said there seems to be a certain regularity in the percentual distributions of the bins: either very small packages 
-or medium sized ones beloning to the 23rd bin, the one that goes from 736 to 768 bytes.
+or medium sized ones belonging to the 23rd bin, the one that goes from 736 to 768 bytes.
+
+- DoH has a very clear typical distributions and the majority of packets 
+of its flows are to be found in the first bin.
+
+- Netflix flows seem to have a clear bias towards medium sized packets. This could be caused by the nature of
+the service (streaming a movie is much more network heavy than dns requests)
