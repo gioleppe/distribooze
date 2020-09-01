@@ -1,25 +1,31 @@
 # distribooze
-distribution printer for network flows
+distribution printing and comparison for network flows
 
 This tool takes a .pcap file as input 
 and outputs the percent distribution vector of packet lenghts in each flow.
-Bins all take 32 bytes each and go from 0 to 1504 bytes.
+if called with the `-c` flag, it compares the given pcap to all previously computed distributions
+The tool can be used to determine how similar two pcaps are, and thus to recognize specific protocols.
+
+Bins used for the distributions all take 32 bytes each and go from 0 to 1504 bytes.
 
 You can pass the pcap's path along with an optional BPF syntax filter to the command line tool.
+The `-c` flag is necessary if you want to plot the similarity to the other fluxes
+
 
 ### Dependencies
 The tool has the following dependency:
+- **Numpy**
 - **Scapy 2.4.3** 
 
 To install scapy you 
 can run this command assuming you are in a 
 conda environment
 
-`conda install scapy`
+`conda install scapy numpy`
 
 alternatively, if you're using plain pip, you can use
 
-`pip3 install scapy`
+`pip3 install scapy numpy`
 
 This is not recommended though, since it
  installs dependencies systemwide and could potentially break other projects.
@@ -28,16 +34,32 @@ This is not recommended though, since it
  
  The tool uses code at https://github.com/daniele-sartiano/doh 
  to print distribution percentage vectors for each unidirectional
-  flow in a given pcap.
+  flow in a given pcap. It saves computed distributions to a dictionary, 
+  then it pickles it for further usage. 
+  When called with the `-c` flag it compares the packet length distribution of the 
+  given pcap with previously computed ones, plotting them ordered by similarity.
+  The similarity is computed using the euclidean distance between the packet length
+  distribution vectors
+  `np.exp(-dist)` is used to compress the real axis in the range (-inf, 1).
+  In case the distance is 0 (i.e. exp(-dist) == 1) the tool states that the analyzed
+   pcap is probably the same.
+   Computed distributions are saved in the ./dists.p pickle file (gitignored).
+
  
  ### Running the tool
  
- In order to run the tool you can use 
+ In order to run the tool to plot the distribution you can use 
  
 ~~~
 git clone https://github.com/gioleppe/distribooze
 cd distribooze
 python3 ./distribooze.py <pcap> -f <BPF_filter>
+~~~
+
+To check for similarity between distributions use
+ 
+~~~
+python3 ./distribooze.py <pcap> -f <BPF_filter> [-c]
 ~~~
 
 You can also use the -h flag to show an help message.
