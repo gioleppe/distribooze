@@ -112,7 +112,7 @@ if args.comp:
 
     for cap in dists:
         results[cap] = np.linalg.norm(dist - dists[cap])
-        print(np.linalg.norm(dist - dists[cap]))
+        #print(np.linalg.norm(dist - dists[cap]))
 
     for elem in sorted(results, key=results.get):
         print("Similarity to " + elem + " : " + str(np.exp(-results[elem])))
