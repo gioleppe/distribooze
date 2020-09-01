@@ -47,9 +47,9 @@ def calc_dist(pcap):
         who = (el[IP].src + ":" + str(el[TCP].sport), "to", el[IP].dst + ":" + str(el[TCP].dport))
         updatechain(who, scale(len(el[IP])), flows)
 
-    for host in flows:
+    """for host in flows:
         print("Flow " + str(host))
-        printchain(flows[host])
+        printchain(flows[host])"""
 
     avg = np.array(newchain())
     count = 0
