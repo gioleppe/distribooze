@@ -5,7 +5,6 @@ from scapy.all import *
 from scapy.layers.inet import IP, TCP
 import argparse
 import numpy as np
-import pickle
 
 
 def updatechain(who, slot, flows):
@@ -33,7 +32,7 @@ def printchain(a):
     for x in range(maxlen):
         a[x] = int((a[x] * 100) / s)
 
-    #print(a)
+    # print(a)
     return a
 
 
@@ -63,10 +62,10 @@ def calc_dist(pcap):
         dist_list.append(np.array(flows[host]))"""
 
     dist_list = [np.array(flows[host][0]) for host in flows]
-    #print(dist_list)
+    # print(dist_list)
     labels = {}
-    clustering = DBSCAN(eps=8).fit(dist_list)
-    #print(clustering.labels_)
+    clustering = DBSCAN(eps=args.eps, min_samples=args.samples).fit(dist_list)
+    # print(clustering.labels_)
 
     cluster_avg = {}
 
@@ -79,23 +78,23 @@ def calc_dist(pcap):
             cluster_avg[label][0] = cluster_avg[label][0] + np.array(flows[host][0])
             cluster_avg[label][1] = 1
 
-    #scaling distributions to percentages
+    # scaling distributions to percentages
     for el in cluster_avg:
         cluster_avg[el][0] = printchain(cluster_avg[el][0])
-        #print(cluster_avg[el][0])
+        # print(cluster_avg[el][0])
 
-    #print(cluster_avg)
+    # print(cluster_avg)
 
-    #put the correct labels to the hosts
+    # put the correct labels to the hosts
     for host, label in zip(flows, clustering.labels_):
         flows[host][1] = label
-        #print(host, label)
+        # print(host, label)
 
     np.set_printoptions(precision=3)
 
     for label in set(clustering.labels_):
 
-        if label>= 0:
+        if label >= 0:
             print("Cluster {:d}, average distribution: ".format(label))
             print(",".join(map(str, cluster_avg[label][0].tolist())))
         else:
@@ -106,19 +105,8 @@ def calc_dist(pcap):
             if flows[host][1] == label:
                 avg = printchain(flows[host][0])
                 similarity = np.linalg.norm(avg - np.array(cluster_avg[label][0]))
-                print(host, "average distribution", ",".join(map(str, avg)), "similarity to cluster avg: {:.2f}".format(similarity))
-
-
-    """for distribution, label in sorted(zip(dist_list, clustering.labels_), key=lambda t: t[1]):
-            avg_dist = printchain(distribution)
-            print(label, avg_dist)"""
-
-
-    #avg = np.divide(avg, count)
-
-    #print("average distribution for ", args.pcap)
-    #distribution = printchain(avg)
-
+                print(host, "average distribution", ",".join(map(str, avg)),
+                      "similarity to cluster avg: {:.2f}".format(similarity))
 
 
 maxlen = int(1504 / 32)
@@ -129,10 +117,13 @@ parser.add_argument('pcap', metavar='P', nargs="+", help='the pcap to analyze')
 parser.add_argument('-f', metavar='F', dest="filter",
                     help='an optional filter in BPF syntax to be applied to the pcap. default = "tcp"',
                     default="tcp")
-parser.add_argument("-n", type=int, dest="numclusters", help="The number of the clusters to be used, default = 2",
-                    default=2)
+parser.add_argument('-e', metavar='E', dest="eps", type=float,
+                    help='DBSCAN distance hyperparameter. default = 8',
+                    default=8)
+parser.add_argument('-m', metavar='M', dest="samples", type=int,
+                    help='DBSCAN minimum samples hyperparameter. default = 5',
+                    default=5)
 
 args = parser.parse_args()
 
 calc_dist(args.pcap[0])
-
