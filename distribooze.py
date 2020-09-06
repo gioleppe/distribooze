@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+from sklearn.cluster import DBSCAN
 from scapy.all import *
 from scapy.layers.inet import IP, TCP
 import argparse
@@ -9,9 +10,10 @@ import pickle
 
 def updatechain(who, slot, flows):
     if (not (who in flows)):
-        flows[who] = newchain()
+        # tuple that says to which cluster it belongs
+        flows[who] = (newchain(), -1)
 
-    flows[who][slot] = flows[who][slot] + 1
+    flows[who][0][slot] = flows[who][0][slot] + 1
 
 
 def newchain():
@@ -31,7 +33,7 @@ def printchain(a):
     for x in range(maxlen):
         a[x] = int((a[x] * 100) / s)
 
-    print(a)
+    #print(a)
     return a
 
 
@@ -53,71 +55,46 @@ def calc_dist(pcap):
 
     avg = np.array(newchain())
     count = 0
+    dist_list = []
 
-    for host in flows:
+    """for host in flows:
         count += 1
         avg += np.array(flows[host])
+        dist_list.append(np.array(flows[host]))"""
 
-    avg = np.divide(avg, count)
+    dist_list = [np.array(flows[host][0]) for host in flows]
+    print(dist_list)
+    labels = {}
+    clustering = DBSCAN(eps=10).fit(dist_list)
+    print(clustering.labels_)
 
-    print("average distribution for ", args.pcap)
-    distribution = printchain(avg)
+    for host, label in zip(flows, clustering.labels_):
+        print(host, label)
 
-    print("updating distribution dictionary with ", args.pcap)
+    """for distribution, label in sorted(zip(dist_list, clustering.labels_), key=lambda t: t[1]):
+            avg_dist = printchain(distribution)
+            print(label, avg_dist)
+    """
 
-    pick = {}
+    #avg = np.divide(avg, count)
 
-    try:
-        pick = pickle.load(open("dists.p", "rb"))
-        pick[args.pcap[0]] = distribution
-        # print(pick)
-    except (OSError, IOError) as e:
-        print("dictionary doesn't exist yet, creating it now.")
-        pick[args.pcap[0]] = distribution
+    #print("average distribution for ", args.pcap)
+    #distribution = printchain(avg)
 
-    pickle.dump(pick, open("dists.p", "wb"))
-    return distribution
 
 
 maxlen = int(1504 / 32)
 
-parser = argparse.ArgumentParser(description='Plot packet lenght distribution')
+parser = argparse.ArgumentParser(description='Plot packet length distribution comparing'
+                                             ' it to its mean cluster distribution average.')
 parser.add_argument('pcap', metavar='P', nargs="+", help='the pcap to analyze')
 parser.add_argument('-f', metavar='F', dest="filter",
                     help='an optional filter in BPF syntax to be applied to the pcap. default = "tcp"',
                     default="tcp")
-parser.add_argument('-c', dest="comp",
-                    help='compares the pcap distribution to previously computed ones',
-                    action="store_true")
+parser.add_argument("-n", type=int, dest="numclusters", help="The number of the clusters to be used, default = 2",
+                    default=2)
 
 args = parser.parse_args()
 
-if args.comp:
-    print("Comparing " + str(args.pcap) + " to previously computed distributions")
-    try:
-        dists = pickle.load(open("dists.p", "rb"))
-    except (OSError, IOError) as e:
-        print("There's no dictionary saved for previous distributions!")
-        exit(0)
+calc_dist(args.pcap[0])
 
-    #print(dists)
-
-    if args.pcap[0] in dists:
-        print("Distribution already present in the dictionary, recovering it from there")
-        dist = dists[args.pcap[0]]
-    else:
-        dist = calc_dist(args.pcap[0])
-
-    results = {}
-
-    for cap in dists:
-        results[cap] = np.linalg.norm(dist - dists[cap])
-        #print(np.linalg.norm(dist - dists[cap]))
-
-    for elem in sorted(results, key=results.get):
-        print("Similarity to " + elem + " : " + str(np.exp(-results[elem])))
-        if results[elem] == 0:
-            print("The two vectors are identical! This is probably the same pcap")
-
-else:
-    calc_dist(args.pcap[0])
