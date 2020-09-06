@@ -11,7 +11,7 @@ import pickle
 def updatechain(who, slot, flows):
     if (not (who in flows)):
         # tuple that says to which cluster it belongs
-        flows[who] = (newchain(), -1)
+        flows[who] = [newchain(), -1]
 
     flows[who][0][slot] = flows[who][0][slot] + 1
 
@@ -63,10 +63,10 @@ def calc_dist(pcap):
         dist_list.append(np.array(flows[host]))"""
 
     dist_list = [np.array(flows[host][0]) for host in flows]
-    print(dist_list)
+    #print(dist_list)
     labels = {}
-    clustering = DBSCAN(eps=10).fit(dist_list)
-    print(clustering.labels_)
+    clustering = DBSCAN(eps=8).fit(dist_list)
+    #print(clustering.labels_)
 
     cluster_avg = {}
 
@@ -79,18 +79,40 @@ def calc_dist(pcap):
             cluster_avg[label][0] = cluster_avg[label][0] + np.array(flows[host][0])
             cluster_avg[label][1] = 1
 
-    for label in cluster_avg:
-        cluster_avg[label][0] = np.divide(cluster_avg[label][0], cluster_avg[label][1])
+    #scaling distributions to percentages
+    for el in cluster_avg:
+        cluster_avg[el][0] = printchain(cluster_avg[el][0])
+        #print(cluster_avg[el][0])
 
-    print(cluster_avg)
+    #print(cluster_avg)
 
+    #put the correct labels to the hosts
     for host, label in zip(flows, clustering.labels_):
-        print(host, label)
+        flows[host][1] = label
+        #print(host, label)
+
+    np.set_printoptions(precision=3)
+
+    for label in set(clustering.labels_):
+
+        if label>= 0:
+            print("Cluster {:d}, average distribution: ".format(label))
+            print(",".join(map(str, cluster_avg[label][0].tolist())))
+        else:
+            print("Undetected flows, average distribution: ".format(label))
+            print(",".join(map(str, cluster_avg[label][0].tolist())))
+
+        for host in flows:
+            if flows[host][1] == label:
+                avg = printchain(flows[host][0])
+                similarity = np.linalg.norm(avg - np.array(cluster_avg[label][0]))
+                print(host, "average distribution", ",".join(map(str, avg)), "similarity to cluster avg: {:.2f}".format(similarity))
+
 
     """for distribution, label in sorted(zip(dist_list, clustering.labels_), key=lambda t: t[1]):
             avg_dist = printchain(distribution)
-            print(label, avg_dist)
-    """
+            print(label, avg_dist)"""
+
 
     #avg = np.divide(avg, count)
 
