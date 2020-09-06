@@ -68,6 +68,22 @@ def calc_dist(pcap):
     clustering = DBSCAN(eps=10).fit(dist_list)
     print(clustering.labels_)
 
+    cluster_avg = {}
+
+    for host, label in zip(flows, clustering.labels_):
+        if label in cluster_avg:
+            cluster_avg[label][0] += flows[host][0]
+            cluster_avg[label][1] += 1
+        else:
+            cluster_avg[label] = [np.array(newchain()), 0]
+            cluster_avg[label][0] = cluster_avg[label][0] + np.array(flows[host][0])
+            cluster_avg[label][1] = 1
+
+    for label in cluster_avg:
+        cluster_avg[label][0] = np.divide(cluster_avg[label][0], cluster_avg[label][1])
+
+    print(cluster_avg)
+
     for host, label in zip(flows, clustering.labels_):
         print(host, label)
 
