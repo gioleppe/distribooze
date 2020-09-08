@@ -14,6 +14,10 @@ in order to get some meaningful results, read below for more info.
 
 Bins used for the distributions all take 32 bytes each and go from 0 to 1504 bytes.
 
+
+Right now only TCP flows are supported, so please use pcaps containing TCP packets.
+
+
 ### Dependencies
 The tool has the following dependency:
 - **Numpy**
@@ -61,7 +65,20 @@ You can try it with
 python3 ./distribooze.py pcaps/ssh_instagram.pcap
 ~~~
 
-to manually set DBSCAN eps or min_samples hyperparameter, use the -e and -m flags, respectively.
+You'll get a result similar to
+
+~~~
+Cluster 0, average distribution:
+61,4,2,5,5,1,0,1,0,0,0,0,1,0,0,1,0,0,0,0,2,0,10,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+('192.168.0.103:56382', 'to', '173.252.107.4:443') average distribution 55,11,0,0,22,0,0,0,11,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 similarity to cluster avg: 25.14
+('173.252.107.4:443', 'to', '192.168.0.103:56382') average distribution 50,12,0,37,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 similarity to cluster avg: 36.69
+('192.168.0.103:38816', 'to', '46.33.70.160:80') average distribution 92,0,0,0,7,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 similarity to cluster avg: 33.44
+~~~
+
+This shows the cluster number, its average distribution and its similarity to the average cluster 
+packet length distribution expressed by computing an euclidean distance between distribution vectors.
+
+If you want to manually set DBSCAN eps or min_samples hyperparameters, use the -e and -m flags, respectively.
 
 You can also use the -h flag to show an help message.
 
