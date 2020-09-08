@@ -62,9 +62,14 @@ def calc_dist(pcap):
         dist_list.append(np.array(flows[host]))"""
 
     dist_list = [np.array(flows[host][0]) for host in flows]
-    # print(dist_list)
+    # qprint(dist_list)
     labels = {}
-    clustering = DBSCAN(eps=args.eps, min_samples=args.samples).fit(dist_list)
+    clustering = None;
+    try:
+        clustering = DBSCAN(eps=args.eps, min_samples=args.samples).fit(dist_list)
+    except ValueError:
+        print("You're probably using an unsupported pcap, only TCP flows are supported right now.")
+        sys.exit(1)
     # print(clustering.labels_)
 
     cluster_avg = {}
