@@ -80,6 +80,8 @@ packet length distribution expressed by computing an euclidean distance between 
 
 If you want to manually set DBSCAN eps or min_samples hyperparameters, use the -e and -m flags, respectively.
 
+Use flag -f to apply an optional BPF filter to the analyzed pcap (not available with pcapng files)
+
 You can also use the -h flag to show an help message.
 
 ### Pcap Analysis 

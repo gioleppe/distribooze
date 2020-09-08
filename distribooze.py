@@ -40,8 +40,12 @@ def calc_dist(pcap):
     print("Analyzing pcap: ", args.pcap)
     print("Using BPF filter: ", args.filter)
 
-    caps = sniff(offline=args.pcap, filter=args.filter)
-
+    caps = None
+    try :
+        caps = sniff(offline=args.pcap, filter=args.filter)
+    except Scapy_Exception:
+        print("You're probably using a pcapng, let's try to read it. Be wary this is experimental only!")
+        caps = PcapNgReader(args.pcap)
     flows = {}
 
     for el in [cap for cap in caps if (IP and TCP) in cap]:
@@ -120,8 +124,8 @@ parser = argparse.ArgumentParser(description='Plot packet length distribution co
                                              ' it to its mean cluster distribution average.')
 parser.add_argument('pcap', metavar='P', nargs="+", help='the pcap to analyze')
 parser.add_argument('-f', metavar='F', dest="filter",
-                    help='an optional filter in BPF syntax to be applied to the pcap. default = "tcp"',
-                    default="tcp")
+                    help='an optional filter in BPF syntax to be applied to the pcap.',
+                    default="")
 parser.add_argument('-e', metavar='E', dest="eps", type=float,
                     help='DBSCAN distance hyperparameter. default = 8',
                     default=8)
